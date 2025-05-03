@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STCLIENT</title>
+    <link rel="icon" href="https://i.imgur.com/tXppQIo.png" type="image/png">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            cursor: none;
+            margin: 0;
+        }
+        #shader-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.3;
+        }
+        .download-card {
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 1rem;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4), 0 0 10px rgba(59, 130, 246, 0.2);
+            padding: 2rem;
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+            transform: perspective(1000px) rotateY(0deg) rotateX(0deg);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            transform-style: preserve-3d;
+            line-height: 1.5;
+        }
+        .download-card:hover {
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(59, 130, 246, 0.3);
+        }
+        .logo {
+            font-family: 'Courier New', monospace;
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #60a5fa;
+            text-shadow: 0 0 5px #60a5fa;
+            margin: 0 auto 1rem;
+            display: inline-block;
+            animation: neon-glow 2s ease-in-out infinite alternate;
+        }
+        @keyframes neon-glow {
+            from { text-shadow: 0 0 3px #60a5fa, 0 0 6px #60a5fa; }
+            to { text-shadow: 0 0 6px #3b82f6, 0 0 12px #3b82f6; }
+        }
+        .download-btn {
+            background: linear-gradient(45deg, #3b82f6, #a855f7);
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 1rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 5px rgba(59, 130, 246, 0.5);
+            line-height: 1.5;
+            border: none;
+            cursor: pointer;
+        }
+        .download-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.2);
+            transition: left 0.4s ease;
+        }
+        .download-btn:hover::before {
+            left: 100%;
+        }
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 10px rgba(59, 130, 246, 0.7);
+        }
+        .discord-btn {
+            background: linear-gradient(45deg, #5865F2, #7289DA);
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 1rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 5px rgba(88, 101, 242, 0.5);
+            line-height: 1.5;
+        }
+        .discord-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.2);
+            transition: left 0.4s ease;
+        }
+        .discord-btn:hover::before {
+            left: 100%;
+        }
+        .discord-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 10px rgba(88, 101, 242, 0.7);
+        }
+        .custom-cursor {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #60a5fa;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.2), transparent);
+            pointer-events: none;
+            transform: translate(-50%, -50%) scale(1);
+            transition: transform 0.2s ease, border-color 0.2s ease;
+            z-index: 1000;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+            animation: cursor-pulse 1.5s infinite;
+        }
+        @keyframes cursor-pulse {
+            0% { transform: translate(-50%, -50%) scale(1); opacity: 0.8; }
+            50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.6; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 0.8; }
+        }
+        .custom-cursor.hovered {
+            transform: translate(-50%, -50%) scale(0.8);
+            border-color: #a855f7;
+            background: radial-gradient(circle, rgba(168, 85, 247, 0.3), transparent);
+            box-shadow: 0 0 15px rgba(168, 85, 247, 0.6);
+        }
+        h1, p {
+            color: #e2e8f0;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="shader-canvas"></canvas>
+    <div class="custom-cursor" id="cursor"></div>
+    <div class="download-card" id="card">
+        <div class="logo">SpookyTimeClient</div>
+        <h1 class="text-2xl font-bold mb-3">Версия Release</h1>
+        <p class="mb-4 text-sm">Нажмите, чтобы открыть ссылку на скачивание!</p>
+        <div class="button-container flex justify-center items-center gap-3">
+            <button onclick="window.open('https://funpay.com/', '_blank')" class="download-btn">Скачать</button>
+            <a href="https://discord.gg/YzFb2sTz" target="_blank" class="discord-btn">Discord</a>
+        </div>
+    </div>
+
+    <script>
+
+        const canvas = document.getElementById('shader-canvas');
+        const gl = canvas.getContext('webgl');
+
+        if (!gl) {
+            console.error('WebGL not supported');
+        }
+
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            gl.viewport(0, 0, canvas.width, canvas.height);
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+   
+        const vertexShaderSource = `
+            attribute vec2 a_position;
+            void main() {
+                gl_Position = vec4(a_position, 0.0, 1.0);
+            }
+        `;
+
+
+        const fragmentShaderSource = `
+            precision mediump float;
+            uniform vec2 u_resolution;
+            uniform float u_time;
+
+            float noise(vec2 p) {
+                return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+            }
+
+            void main() {
+                vec2 uv = gl_FragCoord.xy / u_resolution.xy;
+                vec2 uv0 = uv;
+                uv.y = 1.0 - uv.y; // Flip Y for top-to-bottom flow
+                uv.x *= u_resolution.x / u_resolution.y; // Aspect ratio correction
+
+                // Vertical wave flow
+                float wave = sin(uv.x * 4.0 + uv.y * 5.0 - u_time * 2.5) * 0.1;
+                uv.y += wave;
+
+                // Distance field for wave distortion
+                float d = uv.y + sin(uv.x * 2.0 + u_time * 0.5) * 0.1;
+                d = abs(sin(d * 8.0 + u_time * 1.2));
+
+                // Pure black base
+                vec3 col = vec3(0.0); // Solid black
+
+                // Bright neon wave glow
+                float glow = 0.1 / (d + 0.05);
+                vec3 neon = vec3(0.2, 0.4, 1.0) * glow * 0.8; // Bright blue
+                neon += vec3(0.6, 0.2, 1.0) * (sin(d * 10.0 + u_time) * 0.5 + 0.5) * 0.3; // Purple pulses
+                col += neon;
+
+                // Add noise for texture
+                float n = noise(uv0 * 25.0);
+                col += n * 0.05;
+
+                // Enhance contrast
+                col *= smoothstep(0.0, 0.2, uv0.y) * smoothstep(0.0, 0.2, 1.0 - uv0.y);
+
+                gl_FragColor = vec4(col, 0.3);
+            }
+        `;
+
+
+        function createShader(gl, type, source) {
+            const shader = gl.createShader(type);
+            gl.shaderSource(shader, source);
+            gl.compileShader(shader);
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                console.error('Shader compile error:', gl.getShaderInfoLog(shader));
+                gl.deleteShader(shader);
+                return null;
+            }
+            return shader;
+        }
+
+        const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+        const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+
+ 
+        const program = gl.createProgram();
+        gl.attachShader(program, vertexShader);
+        gl.attachShader(program, fragmentShader);
+        gl.linkProgram(program);
+        if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+            console.error('Program link error:', gl.getProgramInfoLog(program));
+        }
+        gl.useProgram(program);
+
+        const positionBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+        const positions = [-1, -1, 1, -1, -1, 1, 1, 1];
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+
+        const positionLocation = gl.getAttribLocation(program, 'a_position');
+        gl.enableVertexAttribArray(positionLocation);
+        gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+
+
+        const resolutionLocation = gl.getUniformLocation(program, 'u_resolution');
+        const timeLocation = gl.getUniformLocation(program, 'u_time');
+        gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
+
+        let startTime = Date.now();
+        function render() {
+            const currentTime = (Date.now() - startTime) * 0.001;
+            gl.uniform1f(timeLocation, currentTime);
+            gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+            requestAnimationFrame(render);
+        }
+        render();
+
+
+        const cursor = document.getElementById('cursor');
+        let isCursorVisible = true;
+
+        document.addEventListener('mousemove', (e) => {
+            if (isCursorVisible) {
+                cursor.style.left = e.clientX + 'px';
+                cursor.style.top = e.clientY + 'px';
+                cursor.style.display = 'block';
+            }
+        });
+
+        document.addEventListener('mouseleave', () => {
+            cursor.style.display = 'none';
+            isCursorVisible = false;
+        });
+
+        document.addEventListener('mouseenter', () => {
+            isCursorVisible = true;
+            cursor.style.display = 'block';
+        });
+
+ 
+        const card = document.getElementById('card');
+        card.addEventListener('mousemove', (e) => {
+            const rect = card.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            const mouseX = e.clientX - centerX;
+            const mouseY = e.clientY - centerY;
+            const rotateY = (mouseX / rect.width) * 10;
+            const rotateX = -(mouseY / rect.height) * 10;
+            card.style.transform = `perspective(1000px) rotateY(${rotateY}deg) rotateX(${rotateX}deg)`;
+        });
+
+        card.addEventListener('mouseleave', () => {
+            card.style.transform = `perspective(1000px) rotateY(0deg) rotateX(0deg)`;
+        });
+
+
+        const btn = document.querySelector('.download-btn');
+        btn.addEventListener('mouseenter', () => cursor.classList.add('hovered'));
+        btn.addEventListener('mouseleave', () => cursor.classList.remove('hovered'));
+
+        const discordBtn = document.querySelector('.discord-btn');
+        discordBtn.addEventListener('mouseenter', () => cursor.classList.add('hovered'));
+        discordBtn.addEventListener('mouseleave', () => cursor.classList.remove('hovered'));
+    </script>
+</body>
+</html>
